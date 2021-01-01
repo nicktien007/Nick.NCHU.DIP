@@ -4,16 +4,17 @@ import cv2
 import numpy as np
 
 if len(sys.argv) != 2:
-    print("缺少要辨識的圖片名稱")
+    print("缺少要處理的圖片名稱")
     exit()
 
-# 需要辨識的人臉圖片名稱
 img_path = sys.argv[1]
+
 MAX_MATRIX = 8
 A = np.zeros((MAX_MATRIX, MAX_MATRIX), dtype=np.float64)
-# A = np.zeros((MAX_MATRIX, MAX_MATRIX))
 # b = [270, 273, 690, 694, 69, 458, 164, 518]  # Set upMatrix
-b = [14, 6, 752, 762, 101, 550, 28, 575]
+# b = [14, 6, 752, 762, 101, 550, 28, 575]
+# b = [404, 275, 3376, 3520, 1077, 1636, 1198, 1674]  #Perspective_2.jpg
+b = [66, 54, 1092, 1100, 174, 904, 61, 948]  #Perspective_3.jpg
 
 
 # b = np.zeros(MAX_MATRIX, dtype=np.float64)  # Set upMatrix
@@ -62,18 +63,20 @@ def gauss_jordan():
 
 
 def main():
-    image = cv2.imread(img_path)
+    input_img = cv2.imread(img_path)
 
     # aa=cv2.cv.CreateMat(500, 500, image.dtype)
     # persImg = np.zeros(image.shape, dtype=np.float64)
 
     # persImg = np.zeros((400, 480, 3), dtype=image.dtype)
     # persImg = np.zeros((520, 700, 3), dtype=image.dtype)
-    persImg = np.zeros((600, 800, 3), dtype=image.dtype)
+    # persImg = np.zeros((600, 800, 3), dtype=image.dtype)
+    # output_img = np.zeros((1700, 3600, 3), dtype=input_img.dtype) #Perspective_2.jpg
+    output_img = np.zeros((1000, 1400, 3), dtype=input_img.dtype) #Perspective_3.jpg
 
     corner = []
-    rows = persImg.shape[0]
-    cols = persImg.shape[1]
+    rows = output_img.shape[0]
+    cols = output_img.shape[1]
 
     corner.append(Corner(0, 0))
     corner.append(Corner(rows - 1, 0))
@@ -130,16 +133,16 @@ def main():
                 #      u * (1 - v) * persImg[x + 1, y][c] + \
                 #      v * (1 - u) * persImg[x, y + 1][c] +\
                 #      u * v * persImg[x + 1, y + 1][c]
-                rr = (1 - u) * (1 - v) * image[x, y][c] + \
-                     u * (1 - v) * image[x, y + 1][c] + \
-                     v * (1 - u) * image[x + 1, y][c] + \
-                     u * v * image[x + 1, y + 1][c]
+                rr = (1 - u) * (1 - v) * input_img[x, y][c] + \
+                     u * (1 - v) * input_img[x, y + 1][c] + \
+                     v * (1 - u) * input_img[x + 1, y][c] + \
+                     u * v * input_img[x + 1, y + 1][c]
                 # print(f"rr={rr}")
                 # persImg[x, y][c] = rr
-                persImg[i, j][c] = rr
+                output_img[i, j][c] = rr
 
-    cv2.imshow("Perspective_source", image)
-    cv2.imshow("Perspective_process", persImg)
+    cv2.imshow("Perspective_source", input_img)
+    cv2.imshow("Perspective_process", output_img)
     # 隨意Key一鍵結束程式
     cv2.waitKey(0)
     cv2.destroyAllWindows()
