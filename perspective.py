@@ -3,87 +3,60 @@ from math import fabs
 import cv2
 import numpy as np
 
-if len(sys.argv) != 2:
-    print("缺少要處理的圖片名稱")
-    exit()
-
-img_path = sys.argv[1]
-
-MAX_MATRIX = 8
-A = np.zeros((MAX_MATRIX, MAX_MATRIX), dtype=np.float64)
-# b = [270, 273, 690, 694, 69, 458, 164, 518]  # Set upMatrix
-# b = [14, 6, 752, 762, 101, 550, 28, 575]
-# b = [404, 275, 3376, 3520, 1077, 1636, 1198, 1674]  #Perspective_2.jpg
-b = [66, 54, 1092, 1100, 174, 904, 61, 948]  #Perspective_3.jpg
-
-
-# b = np.zeros(MAX_MATRIX, dtype=np.float64)  # Set upMatrix
 
 class Corner:
+    def __init__(self, r, c):
+        self.r = r
+        self.c = c
+
+    def get_corner(self):
+        return [Point(0, 0),
+                Point(self.r - 1, 0),
+                Point(0, self.c - 1),
+                Point(self.r - 1, self.c - 1)]
+
+
+class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
 
-def gauss_jordan():
-    i, j, k, s = 0, 0, 0, 0
-    r, u, temp = 0.0, 0.0, 0.0
-    l = np.zeros((MAX_MATRIX, MAX_MATRIX), dtype=np.float64)
-
-    for k in range(MAX_MATRIX - 1):
-        s = k
-        r = fabs(A[k, k])
-
-        for i in range(k, MAX_MATRIX):
-            if r < fabs(A[i, k]):
-                r = fabs(A[i, k])
-                s = i
-        if s != k:
-            A[[k, s]] = A[[s, k]]  # 交換 k row 和 s rom
-            temp = b[k]
-            b[k] = b[s]
-            b[s] = temp
-
-        for i in range(k + 1, MAX_MATRIX):
-            l[i, k] = A[i, k] / A[k, k]
-
-            for j in range(k, MAX_MATRIX):
-                A[i, j] = A[i, j] - l[i, k] * A[k, j]
-            b[i] = b[i] - l[i, k] * b[k]
-
-    if A[k, k] < 0.0001:
-        print("Error!Can not find the solution!")
-        exit(1)
-
-    for i in range(MAX_MATRIX - 1, -1, -1):
-        u = 0
-        for j in range(i + 1, MAX_MATRIX):
-            u = u + A[i, j] * b[j]
-        b[i] = (b[i] - u) / A[i, i]
-
-
 def main():
+    img_path = sys.argv[1]
     input_img = cv2.imread(img_path)
+    max_matrix = 8
 
-    # aa=cv2.cv.CreateMat(500, 500, image.dtype)
-    # persImg = np.zeros(image.shape, dtype=np.float64)
+    # b = [404, 275, 3376, 3520, 1077, 1636, 1198, 1674]  #Perspective_2.jpg
+    # b = [66, 54, 1092, 1100, 174, 904, 61, 948]  #Perspective_3.jpg
+    # x1,x2,x3,x4,y1,y2,y3,y4
+    b = [int(b) for b in sys.argv[2].split(',')]
+    A = np.zeros((max_matrix, max_matrix), dtype=np.float64)
 
-    # persImg = np.zeros((400, 480, 3), dtype=image.dtype)
-    # persImg = np.zeros((520, 700, 3), dtype=image.dtype)
-    # persImg = np.zeros((600, 800, 3), dtype=image.dtype)
-    # output_img = np.zeros((1700, 3600, 3), dtype=input_img.dtype) #Perspective_2.jpg
-    output_img = np.zeros((1000, 1400, 3), dtype=input_img.dtype) #Perspective_3.jpg
+    out_x = abs(b[3] - b[0])
+    out_y = abs(b[4] - b[5])
+    output_img = np.zeros((out_y, out_x, 3), dtype=input_img.dtype)  # Perspective_3.jpg
 
-    corner = []
     rows = output_img.shape[0]
     cols = output_img.shape[1]
+    corner = Corner(rows, cols).get_corner()
 
-    corner.append(Corner(0, 0))
-    corner.append(Corner(rows - 1, 0))
-    corner.append(Corner(0, cols - 1))
-    corner.append(Corner(rows - 1, cols - 1))
+    init_A(A, corner, max_matrix)
+    b = gauss_jordan(A, b)
 
-    for i in range(MAX_MATRIX):
+    [print(f'b[{i}]={b[i]}') for i in range(max_matrix)]
+
+    invert_mapping(b, input_img, output_img)
+
+    cv2.imshow("Perspective_source", input_img)
+    cv2.imshow("Perspective_process", output_img)
+    # 隨意Key一鍵結束程式
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def init_A(A, corner, max_matrix):
+    for i in range(max_matrix):
         if i < 4:
             A[i, 0] = corner[i].x
             A[i, 1] = corner[i].y
@@ -95,19 +68,53 @@ def main():
             A[i, 6] = corner[i - 4].x * corner[i - 4].y
             A[i, 7] = 1
 
-    # b[0] = 270 #x1
-    # b[1] = 273 #x2
-    # b[2] = 690 #x3
-    # b[3] = 694 #x4
-    # b[4] = 69  #y1
-    # b[5] = 458 #y2
-    # b[6] = 164 #y3
-    # b[7] = 518 #y4
 
-    gauss_jordan()
+def gauss_jordan(A, b):
+    """
+    高斯消去法
+    :return: b
+    """
+    i, j, k, s = 0, 0, 0, 0
 
-    for i in range(MAX_MATRIX):
-        print(f'b[{i}]={b[i]}')
+    # l = np.zeros((MAX_MATRIX, MAX_MATRIX), dtype=np.float64)
+    max_matrix = A.shape[0]
+    l = np.zeros((max_matrix, max_matrix), dtype=np.float64)
+
+    for k in range(max_matrix - 1):
+        s = k
+        r = fabs(A[k, k])
+
+        for i in range(k, max_matrix):
+            if r < fabs(A[i, k]):
+                r = fabs(A[i, k])
+                s = i
+        if s != k:
+            A[[k, s]] = A[[s, k]]  # 交換 k row 和 s row
+            b[k], b[s] = b[s], b[k]
+
+        for i in range(k + 1, max_matrix):
+            l[i, k] = A[i, k] / A[k, k]
+
+            for j in range(k, max_matrix):
+                A[i, j] = A[i, j] - l[i, k] * A[k, j]
+            b[i] = b[i] - l[i, k] * b[k]
+
+    if A[k, k] < 0.0001:
+        print("Error!Can not find the solution!")
+        exit(1)
+
+    for i in range(max_matrix - 1, -1, -1):
+        u = 0
+        for j in range(i + 1, max_matrix):
+            u = u + A[i, j] * b[j]
+        b[i] = (b[i] - u) / A[i, i]
+
+    return b
+
+
+def invert_mapping(b, input_img, output_img):
+    rows = output_img.shape[0]
+    cols = output_img.shape[1]
 
     for i in range(rows):
         for j in range(cols):
@@ -117,35 +124,12 @@ def main():
             x = int(double_x)
             v = (double_y - y)
             u = (double_x - x)
-            # print(f"i,j={i},{j}")
-            # print(f"x,y={x},{y}")
             for c in range(3):
-                # r1 = (1 - u) * (1 - v) * image[x, y][c]
-                # u1 = u * (1 - v) * image[x + 1, y][c]
-                # v1 = v * (1 - u) * image[x, y + 1][c]
-                # u2 = u * v * image[x + 1, y + 1][c]
-                #
-                # rr = r1 + u1 + v1 + u2
-                # print(f"rr={rr},r1={r1},u1={u1},v1={v1},u2={u2}")
-
-                # persImg[i, j][c] = rr
-                # rr = (1 - u) * (1 - v) * persImg[x, y][c] + \
-                #      u * (1 - v) * persImg[x + 1, y][c] + \
-                #      v * (1 - u) * persImg[x, y + 1][c] +\
-                #      u * v * persImg[x + 1, y + 1][c]
-                rr = (1 - u) * (1 - v) * input_img[x, y][c] + \
-                     u * (1 - v) * input_img[x, y + 1][c] + \
-                     v * (1 - u) * input_img[x + 1, y][c] + \
-                     u * v * input_img[x + 1, y + 1][c]
-                # print(f"rr={rr}")
-                # persImg[x, y][c] = rr
-                output_img[i, j][c] = rr
-
-    cv2.imshow("Perspective_source", input_img)
-    cv2.imshow("Perspective_process", output_img)
-    # 隨意Key一鍵結束程式
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+                # f(x,y) = (1-u)(1-v)g(x,y) + u(1-v)g(x,y+1) + v(1-u)g(x+1,y) + uvg(x+1,y+1)
+                output_img[i, j, c] = (1 - u) * (1 - v) * input_img[x, y][c] + \
+                                      u * (1 - v) * input_img[x, y + 1][c] + \
+                                      v * (1 - u) * input_img[x + 1, y][c] + \
+                                      u * v * input_img[x + 1, y + 1][c]
 
 
 if __name__ == '__main__':
