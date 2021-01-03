@@ -2,15 +2,14 @@ import sys
 import cv2
 import numpy as np
 
-if len(sys.argv) != 2:
-    print("缺少要處理的圖片名稱")
-    exit()
 
-img_path = sys.argv[1]
+
 
 
 def main():
+    img_path = sys.argv[1]
     input_img = cv2.imread(img_path)
+    element_size = int(sys.argv[2])
     cv2.imshow("source", input_img)
 
     gray_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
@@ -31,7 +30,7 @@ def main():
     cv2.imshow("mask", mask)  # mask
 
     # Region Filling，定義一個Structures Element 做dilation，直到收斂為止
-    el = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    el = cv2.getStructuringElement(cv2.MORPH_CROSS, (element_size, element_size))
     cnt = 0
     m_cnt = 0
     while True:
@@ -39,11 +38,11 @@ def main():
         dilation = cv2.dilate(marker, el)
         marker = np.min((dilation, mask), axis=0)  # dilation 跟 mask做比較，取最小值(0)，以達到filling的效果
         # 觀察 marker 變化
-        # cnt += 1
-        # if cnt > 20:
-        #     cv2.imshow(f"marker{m_cnt}", marker)
-        #     m_cnt += 1
-        #     cnt = 0
+        cnt += 1
+        if cnt > 10:
+            cv2.imshow(f"marker{m_cnt}", marker)
+            m_cnt += 1
+            cnt = 0
         if (marker_pre == marker).all():
             break
 
@@ -59,4 +58,8 @@ def main():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print("缺少要處理的圖片名稱")
+        exit()
+
     main()

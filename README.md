@@ -41,3 +41,39 @@ python unsharp.py ./test/Lena_2.png 128
 ![src](./test/Lena_2.png)
 
 ![src](./output/Snipaste_20210103150104.png)
+
+## 邊界抽取 Boundary Extraction
+
+參數
+
+position1: `input_image_path`
+ 
+position2: `element_size`
+
+
+調用範例：
+```
+python boundary.py ./test/staff.png 3
+```
+
+執行結果
+![result](./output/Snipaste_20210103152042.png)
+
+## 區域填充 Region Filling
+
+參數
+
+position1: `input_image_path`
+ 
+position2: `element_size`
+
+
+調用範例：
+```
+python regionfilling.py ./test/RegionFilling.png 3
+```
+
+執行結果
+![r1](./output/Snipaste_20210103153007.png)
+![r2](./output/Snipaste_20210103153124.png)
+![r3](./output/Snipaste_20210103153218.png)
