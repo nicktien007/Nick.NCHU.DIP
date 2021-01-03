@@ -22,6 +22,15 @@ python perspective.py ./test/Perspective_4.png 258,247,650,633,271,555,261,534
 
 ![src](./output/Perspective_process_screenshot_03.01.2021.png)
 
+![src](./test/Perspective_3.jpg)
+
+![src](./output/Perspective_process_screenshot_01.01.2021-2.png)
+
+
+![src](./test/Perspective_2.jpg)
+
+![src](./output/Perspective_process_screenshot_01.01.2021.png)
+
 ## 非銳化濾鏡 Unsharp Masking
 
 參數
