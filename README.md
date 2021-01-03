@@ -21,3 +21,23 @@ python perspective.py ./test/Perspective_4.png 258,247,650,633,271,555,261,534
 ![src](./test/Perspective_4.png)
 
 ![src](./output/Perspective_process_screenshot_03.01.2021.png)
+
+## 非銳化濾鏡 Unsharp Masking
+
+參數
+
+position1: `input_image_path`
+ 
+position2: `threshold 閥值`
+
+
+調用範例：
+```
+python unsharp.py ./test/Lena_2.png 128
+```
+
+執行結果
+
+![src](./test/Lena_2.png)
+
+![src](./output/Snipaste_20210103150104.png)

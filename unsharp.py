@@ -7,12 +7,13 @@ import numpy as np
 
 def main():
     img_path = sys.argv[1]
+    threshold = int(sys.argv[2])
     input_img = cv2.imread(img_path)
     cv2.imshow("Unsharp_source", input_img)
 
     gray_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
 
-    service = UnsharpService(threshold=128)
+    service = UnsharpService(threshold=threshold)
     diff_1_img = service.get_diff_1(gray_img)
     diff_2_img = service.get_diff_2(gray_img)
     mean_img = service.mean_filter(diff_1_img)  # unsharp mask
@@ -57,6 +58,11 @@ class UnsharpService:
                                -1, -1, -1]
 
     def mean_filter(self, img):
+        """
+        算術平均濾波
+        :param img:
+        :return:
+        """
         rows = img.shape[0]
         cols = img.shape[1]
         mean_img = np.zeros((rows, cols), dtype=img.dtype)
@@ -70,6 +76,11 @@ class UnsharpService:
         self.__convolution(src, out, self.__sobel_x_mask, ConvolutionType.Sobel_X)
 
     def get_diff_1(self, img):
+        """
+        一階微分
+        :param img:
+        :return:
+        """
         rows = img.shape[0]
         cols = img.shape[1]
         sobel_y_img = np.zeros((rows, cols), dtype=img.dtype)
@@ -90,6 +101,11 @@ class UnsharpService:
         return diff_1_img
 
     def get_diff_2(self, img):
+        """
+        二階微分
+        :param img:
+        :return:
+        """
         rows = img.shape[0]
         cols = img.shape[1]
 
@@ -132,7 +148,8 @@ class UnsharpService:
                     src[i, j, c] = self.__chk_val(src[i, j, c] + (diff_2_img[i, j] * (mean_img[i, j] / 255)))
         return src
 
-    def __chk_val(self, v):
+    @staticmethod
+    def __chk_val(v):
         if v > 255:
             return 255
         if v < 0:
@@ -141,7 +158,7 @@ class UnsharpService:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("缺少要處理的圖片名稱")
         exit()
     main()
