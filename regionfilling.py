@@ -1,7 +1,7 @@
 import sys
 import cv2
 import numpy as np
-from morphology import dilation, erosion
+import morphology
 
 
 def main():
@@ -29,18 +29,18 @@ def main():
 
     # Region Filling，定義一個Structures Element 做dilation，直到收斂為止
     el = cv2.getStructuringElement(cv2.MORPH_CROSS, (element_size, element_size))
-    cnt = 0
-    m_cnt = 0
+    # cnt = 0
+    # m_cnt = 0
     while True:
         marker_pre = marker
-        dilation = cv2.dilate(marker, el)
+        dilation = morphology.dilate(marker, el)
         marker = np.min((dilation, mask), axis=0)  # dilation 跟 mask做比較，取最小值(0)，以達到filling的效果
         # 觀察 marker 變化
-        cnt += 1
-        if cnt > 10:
-            cv2.imshow(f"marker{m_cnt}", marker)
-            m_cnt += 1
-            cnt = 0
+        # cnt += 1
+        # if cnt > 10:
+        #     cv2.imshow(f"marker{m_cnt}", marker)
+        #     m_cnt += 1
+        #     cnt = 0
         if (marker_pre == marker).all():
             break
 

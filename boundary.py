@@ -1,6 +1,6 @@
 import sys
 import cv2
-from morphology import dilation, erosion
+import morphology
 
 
 def main():
@@ -18,18 +18,18 @@ def main():
     # 3*3 Structures Element
     origin_el = cv2.getStructuringElement(cv2.MORPH_RECT, (element_size, element_size))
     # Erosion
-    erode = erosion(img_binary, origin_el)
+    erosion = morphology.erode(img_binary, origin_el)
     # Dilation
-    dilate = dilation(img_binary, origin_el)
+    dilation = morphology.dilate(img_binary, origin_el)
 
     # 膨脹 - 腐蝕 = 邊界 (也可膨脹-原圖 或者 原圖-腐蝕，高興就好!!)
-    boundary = cv2.absdiff(dilate, erode)
+    boundary = dilation - erosion
 
     # 二值圖畫素取反
-    result = 1 - boundary
+    result = 255 - boundary
 
-    cv2.imshow("erode", erode)  # erode
-    cv2.imshow("dilate", dilate)  # dilate
+    cv2.imshow("erode", erosion)  # erode
+    cv2.imshow("dilate", dilation)  # dilate
     cv2.imshow("boundary", result)  # boundary
 
     # 隨意Key一鍵結束程式
